@@ -1,16 +1,16 @@
-# Fabric 1.21.8 Java nuker agent — version 5
+# Fabric 1.21.8 block agent — version 6
 
 [Download nuker-package.zip](https://github.com/Calculus1212/Codex/raw/refs/heads/main/nuker-package.zip)
 
-Extract the ZIP into a new folder. **Restart Minecraft before attaching this update.** It contains `nuker-agent.jar`, `attach.cmd`, instructions, and Java source.
+Extract into a new folder and **restart Minecraft before attaching this update**. The ZIP includes `nuker-agent.jar`, `attach.cmd`, instructions, Java source, and mock runtime tests.
 
-Version 5 sends a **START/STOP break-request pair for every non-air block in a radius-6 sphere**, then immediately moves to the next block. It does not wait for normal mining progress or for a block to disappear. Remaining blocks are attempted again in the next batch. The delay after each completed batch is **500 ms**.
+This version sends **START_DESTROY_BLOCK only**, with **1000 ms between batches**. It sends no STOP_DESTROY_BLOCK or ABORT_DESTROY_BLOCK packets. Each batch attempts every non-air block in the radius-6 sphere around the player's eyes, without waiting for progress or block removal.
 
-The default `budget=0` means all surrounding non-air blocks are attempted. Client-side game-mode, interaction-reach, hardness, and per-cycle block filters have been removed. The configured radius defines the area. Servers still decide whether requests succeed; early or out-of-reach requests can be rejected, and some survival blocks may remain unbroken. The agent does not force local block removal.
+**START is a block attack request and can still break instantly mineable blocks or creative-mode blocks. This does not guarantee that surrounding blocks stay intact.** Server behavior determines what happens. The agent does not force local block removal.
 
-Requests use Minecraft's sequenced-packet sender and synchronize the selected tool slot first. One client-thread batch may be pending at a time. Large batches increase client, network, and server load.
+Defaults: `radius=6,budget=0,interval=1000`. Budget 0 means all targets. Client-side game-mode, reach, and hardness filters are absent; the server still applies its rules. The selected tool slot is synchronized, and requests use Minecraft's sequenced-packet sender.
 
-Requires Minecraft **1.21.8**, Fabric Loader, and **Java 21** with `jdk.attach`. Fabric API is optional.
+Requires **Java 21** with `jdk.attach`, Minecraft **1.21.8**, and Fabric Loader. Fabric API is optional.
 
 Open CMD in the extracted folder:
 
@@ -18,14 +18,14 @@ Open CMD in the extracted folder:
 attach.cmd
 ```
 
-Find Minecraft's process ID and replace `12345`:
+Find Minecraft's PID, then replace `12345`:
 
 ```cmd
 attach.cmd 12345
 ```
 
-**N** toggles; **End** stops. It starts disabled and pauses in menus or when unfocused. World changes turn it off. Defaults: `radius=6,budget=0,interval=500`. A positive budget optionally limits requests per batch. See the packaged README for details.
+**N** toggles; **End** stops. It starts OFF, pauses in menus or when unfocused, and turns OFF on world changes. Stopping prevents new requests but sends no cancellation packet. See the packaged README for configuration and details.
 
-Real JVM attachment passed mock tests with and without Fabric API. The mock deliberately leaves all blocks unbroken, verifying full-area requests and retries without waiting, START/STOP ordering, packet sequences, optional limits, selected-tool synchronization, 500 ms scheduling, pause/stop behavior, and avoiding queued bursts. Live Minecraft/server compatibility remains untested.
+Attachment tests passed with and without mock Fabric API: START-only actions, no STOP or ABORT, one request per target, packet sequences, full-area coverage, optional limits, retries, 1000 ms scheduling, and pause/stop behavior. Live Minecraft/server behavior remains untested; these mocks cannot verify that blocks will stay intact.
 
-Package SHA-256: `97fc774a41c8e835bc2f6ed9a3d8325184d6cac8c6a7a38940df532b8569bc63`.
+Package SHA-256: `6aa1fed483097ff122d1b6de6ff430359c1d865ec7e13e8439e8832104fe41d2`.
