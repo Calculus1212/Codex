@@ -1,8 +1,8 @@
-# Fabric 1.21.8 redstone ore agent, version 8
+# Fabric 1.21.8 redstone ore agent, version 9
 
 Requires Java 21 with jdk.attach, Minecraft 1.21.8 and Fabric Loader in the intermediary namespace. Fabric API is optional.
 
-This version sends START_DESTROY_BLOCK immediately followed by ABORT_DESTROY_BLOCK to the same position and face, targeting normal and deepslate redstone ore in a 15-block radius. START is a block attack request and can still break instantly mineable or creative-mode blocks. The server can reject targets beyond its permitted reach. These requests do not grant a 15-block interaction reach or guarantee that ore stays intact.
+This version sends ABORT_DESTROY_BLOCK only, targeting normal and deepslate redstone ore in a 15-block radius. ABORT cancels a mining action; without a preceding START it generally does not hit or activate redstone ore. The agent does not initiate or finish block breaking. Server behavior and acceptance of these requests may vary, and the requested radius does not grant a 15-block interaction reach.
 
 ## Upgrade and use from Windows CMD
 
@@ -22,13 +22,13 @@ N toggles requests; End stops the agent until Minecraft restarts. It starts OFF,
 
 ## Redstone-only requests
 
-Each batch scans a sphere centered on the player's eyes, using block-center distance. The default and maximum radius is 15 blocks. It sends one START_DESTROY_BLOCK request followed immediately by one ABORT_DESTROY_BLOCK request for each normal or deepslate redstone ore block inside that sphere. Both lit and unlit states are included. Other block types are skipped. Redstone ore is recognized by Minecraft's RedstoneOreBlock type, including subclasses.
+Each batch scans a sphere centered on the player's eyes, using block-center distance. The default and maximum radius is 15 blocks. It sends one ABORT_DESTROY_BLOCK request for each normal or deepslate redstone ore block inside that sphere. Both lit and unlit states are included. Other block types are skipped. Redstone ore is recognized by Minecraft's RedstoneOreBlock type, including subclasses.
 
 Only ore visible in the client's loaded world can be found. The agent does not ask the server for unknown block positions or load distant chunks. The requested radius does not bypass server range checks.
 
-No STOP_DESTROY_BLOCK packets are sent. There is no delay or block-state check between START and ABORT; cancellation is attempted immediately before moving to the next ore. The agent does not retain a mining target, advance mining progress, force local block removal, or wait for blocks to disappear. Ore still present is attempted again in the next batch. The delay after each completed batch remains 1000 ms.
+No START_DESTROY_BLOCK or STOP_DESTROY_BLOCK packets are sent. The agent does not retain a mining target, advance mining progress, force local block removal, or wait for blocks to disappear. Ore still present is attempted again in the next batch. The delay after each completed batch remains 1000 ms.
 
-The selected tool slot is synchronized before each batch. Requests use Minecraft's sequenced-packet sender. All game calls run on the client thread, with only one pending batch. Stopping prevents new requests but does not recall already-sent packets or send any additional cancellation packet beyond each normal START/ABORT pair.
+The selected tool slot is synchronized before each batch. Requests use Minecraft's sequenced-packet sender. All game calls run on the client thread, with only one pending batch. Stopping prevents new requests but does not recall already-sent packets.
 
 ## Configure
 
@@ -52,12 +52,12 @@ Run under the same OS user as Minecraft. Use Java 21 with jdk.attach. If dynamic
 
 Source and mock tests are in source/. Build on Windows with source\build.cmd or on Linux with source/build.sh. Requires a Java 21 JDK and no external build dependencies. RedstoneOreBlock, block-state access, and packet symbols were checked against FabricMC Yarn 1.21.8. The uploaded client-intermediary.jar exceeded the 32 MiB transfer limit and was not inspected.
 
-source/test.sh attaches to real JVMs with mock Minecraft classes, with and without mock Fabric API. Tests verify normal and deepslate ores, lit states, filtering out other blocks and ores, targets exactly 15 blocks away, exclusion beyond the spherical boundary, negative coordinates, adjacent START/ABORT pairs on the same position and face, increasing packet sequences, optional batch limits, retries, 1000 ms scheduling, pause/stop behavior, and no task backlog. Mock tests cannot establish live server acceptance or nonbreaking behavior. Live game/server compatibility remains untested.
+source/test.sh attaches to real JVMs with mock Minecraft classes, with and without mock Fabric API. Tests verify normal and deepslate ores, lit states, filtering out other blocks and ores, targets exactly 15 blocks away, exclusion beyond the spherical boundary, negative coordinates, ABORT-only actions throughout every batch and control transition, increasing packet sequences, optional batch limits, retries, 1000 ms scheduling, pause/stop behavior, and no task backlog. Mock tests cannot establish live server acceptance or redstone activation. Live game/server compatibility remains untested.
 
 ## Download
 
 Download [nuker-package.zip](https://github.com/Calculus1212/Codex/raw/main/nuker-package.zip), extract it, restart Minecraft, and follow the CMD instructions above.
 
-Package SHA-256: `e3e8b58ba7bfbd76c8e7775dad852ea4afd782cc815aa9b66a426a87449bef08`
+Package SHA-256: `081e7c1e231740bfd63e2ef79806827775ffbc208087d7065c8e9f4019cc76c5`
 
-Version 8 passed 120 checks across three real JVM attachments using mock Minecraft classes. Live Minecraft/server compatibility remains untested.
+Version 9 passed 191 checks across three real JVM attachments using mock Minecraft classes. The compiled agent was also checked to contain ABORT_DESTROY_BLOCK only. Live Minecraft/server compatibility remains untested.
