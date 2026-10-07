@@ -1,14 +1,16 @@
 # Minecraft agent downloads
 
-## XP crop planter — Fabric 1.21.8
+## XP crop planter — Fabric 1.21.8, version 2
 
 [Download planter-package.zip](https://github.com/Calculus1212/Codex/raw/main/planter-package.zip) | [Full planter instructions](planter-README.md)
 
-Plants Erazion XP Seeds on empty farmland within 5 blocks using batches of block-use requests, with a 100 ms delay after each batch. Hold the seeds in your selected hotbar slot, attach from CMD, then press P to enable. End stops it. Restart Minecraft and extract this package into its own folder before switching from the redstone agent.
+Sends up to 70 Erazion XP Seed planting requests to empty farmland within 5 blocks in one burst, then waits 100 ms before the next batch. There is no per-target delay or one-second retry pause. Hold XP Seeds in your selected hotbar slot, attach from CMD, then press P to enable. End stops it. Restart Minecraft and extract this update into its own folder before attaching.
 
-Package SHA-256: `1481736ae929d6390c0e126172b8d397d8adf9865925fd117e23bb51b22d17cf`
+The server still needs enough seeds and can process or reject requests individually. A burst of 70 requests does not guarantee 70 instant crops.
 
-Mock tests passed, including a 64-target batch and CMD stop. Live Erazion game/server compatibility remains untested.
+Package SHA-256: `bceb20cac99321a1efe9c5037ca21f4a7a5bd1c5ba5c38aa317351388e7a31ed`
+
+Mock tests passed, including a 70-target batch and CMD stop. Live Erazion game/server compatibility remains untested.
 
 ---
 
