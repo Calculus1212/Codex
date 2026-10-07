@@ -1,18 +1,18 @@
 # Minecraft agent downloads
 
-## General top placement module — Fabric 1.21.8, version 4
+## General top placement module — Fabric 1.21.8, version 5
 
 [Download planter-package.zip](https://github.com/Calculus1212/Codex/raw/main/planter-package.zip) | [Full placement instructions](planter-README.md)
 
-Uses any nonempty item in your selected main hand on the top faces of blocks on the layer immediately below your feet, within 8 blocks of your eyes. Sends up to 70 requests in one burst, then waits 100 ms. Occupied spaces above supports are skipped. Seeds, building blocks and other items use their normal server behavior.
+Uses any nonempty main-hand item on the top faces of blocks on the layer immediately below your feet, within 8 blocks of your eyes. Sends up to 70 requests in one burst, then waits 100 ms. Every batch continues where the previous batch stopped. The nearest-first scan restarts only after the full target list has been examined. Occupied spaces above supports are skipped.
 
-Restart Minecraft, extract this update into its own folder, hold the item you want to use, attach from CMD, then press P to enable. End stops it. Slabs, farmland and negative Y coordinates select the correct support layer.
+Pauses and fractional movement preserve progress. Crossing into a different player block or support Y layer resets the scan for the new area. Restart Minecraft, extract the update, attach from CMD, then press P to enable. End stops it.
 
 The server controls whether each request places a block, plants a crop or performs another interaction and can reject targets beyond its permitted reach. An 8-block target radius does not increase server reach. A burst of 70 requests does not guarantee 70 placements.
 
-Package SHA-256: `7733d1b5a53d9c774048fc7819babf589618693053c898e4def45a637c9703cb`
+Package SHA-256: `f53914bf2b1ca2f8c19220cb1e7bd7047805ec871eb5c39e3ca77887eba68c43`
 
-Mock tests passed, including exact 8-block targets, a 70-request burst, feet-layer filtering and CMD stop. Live game/server compatibility remains untested.
+Mock tests passed, including full sweep coverage before wraparound, a 70-request burst and CMD stop. Live game/server compatibility remains untested.
 
 ---
 
