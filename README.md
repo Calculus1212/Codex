@@ -1,3 +1,17 @@
+# Minecraft agent downloads
+
+## XP crop planter — Fabric 1.21.8
+
+[Download planter-package.zip](https://github.com/Calculus1212/Codex/raw/main/planter-package.zip) | [Full planter instructions](planter-README.md)
+
+Plants Erazion XP Seeds on empty farmland within 5 blocks using batches of block-use requests, with a 100 ms delay after each batch. Hold the seeds in your selected hotbar slot, attach from CMD, then press P to enable. End stops it. Restart Minecraft and extract this package into its own folder before switching from the redstone agent.
+
+Package SHA-256: `1481736ae929d6390c0e126172b8d397d8adf9865925fd117e23bb51b22d17cf`
+
+Mock tests passed, including a 64-target batch and CMD stop. Live Erazion game/server compatibility remains untested.
+
+---
+
 # Fabric 1.21.8 redstone ore agent, version 9
 
 Requires Java 21 with jdk.attach, Minecraft 1.21.8 and Fabric Loader in the intermediary namespace. Fabric API is optional.
