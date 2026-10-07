@@ -1,18 +1,18 @@
 # Minecraft agent downloads
 
-## General top placement module — Fabric 1.21.8, version 3
+## General top placement module — Fabric 1.21.8, version 4
 
 [Download planter-package.zip](https://github.com/Calculus1212/Codex/raw/main/planter-package.zip) | [Full placement instructions](planter-README.md)
 
-Uses any nonempty item in your selected main hand on the top faces of blocks on the layer immediately below your feet, within 5 blocks. Sends up to 70 requests in one burst, then waits 100 ms. Occupied spaces above supports are skipped. Seeds, building blocks and other items use their normal server behavior.
+Uses any nonempty item in your selected main hand on the top faces of blocks on the layer immediately below your feet, within 8 blocks of your eyes. Sends up to 70 requests in one burst, then waits 100 ms. Occupied spaces above supports are skipped. Seeds, building blocks and other items use their normal server behavior.
 
 Restart Minecraft, extract this update into its own folder, hold the item you want to use, attach from CMD, then press P to enable. End stops it. Slabs, farmland and negative Y coordinates select the correct support layer.
 
-The server controls whether each request places a block, plants a crop or performs another interaction. A burst of 70 requests does not guarantee 70 placements.
+The server controls whether each request places a block, plants a crop or performs another interaction and can reject targets beyond its permitted reach. An 8-block target radius does not increase server reach. A burst of 70 requests does not guarantee 70 placements.
 
-Package SHA-256: `a451a830dd34651157f9fc39b28a54380fc68057e621aaa58cfe6935ca6ff021`
+Package SHA-256: `7733d1b5a53d9c774048fc7819babf589618693053c898e4def45a637c9703cb`
 
-Mock tests passed, including a 70-request burst, feet-layer filtering and CMD stop. Live game/server compatibility remains untested.
+Mock tests passed, including exact 8-block targets, a 70-request burst, feet-layer filtering and CMD stop. Live game/server compatibility remains untested.
 
 ---
 
