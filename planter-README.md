@@ -1,10 +1,10 @@
-# XP crop planter for Fabric 1.21.8, version 2
+# General top placement module for Fabric 1.21.8, version 3
 
-An attachable Java 21 agent that plants Erazion XP Seeds on empty farmland using PlayerInteractBlockC2SPacket requests. Fabric Loader in the intermediary namespace is required; Fabric API is optional.
+An attachable Java 21 agent that sends top-face block-use requests using any nonempty item in your selected main hand. It targets only the block layer immediately below your feet. Fabric Loader in the intermediary namespace is required; Fabric API is optional. The package keeps the existing planter-agent.jar name.
 
 ## Windows CMD
 
-Restart Minecraft before switching from an older agent. Extract planter-package.zip into its own folder. Enter your world, put XP Seeds in your selected hotbar slot, and open CMD in the extracted folder.
+Restart Minecraft before attaching this update. Extract planter-package.zip into its own folder. Enter your world, select the item or block you want to use in your hotbar, and open CMD in the extracted folder.
 
 ```cmd
 attach.cmd
@@ -16,46 +16,46 @@ Find Minecraft's PID and replace 12345:
 attach.cmd 12345
 ```
 
-Press P in Minecraft to enable or disable planting. It starts OFF. End stops it until Minecraft restarts. Menus and lost focus pause requests, and switching worlds turns planting OFF. To stop through CMD:
+Press P to enable or disable interactions. It starts OFF. End stops the agent until Minecraft restarts. Menus and lost focus pause requests, and switching worlds turns the module OFF. To stop through CMD:
 
 ```cmd
 attach.cmd 12345 stop
 ```
 
-Use Java 21 with jdk.attach under the same OS user as Minecraft. If dynamic attachment is disabled, add -XX:+EnableDynamicAgentLoading to Minecraft's JVM arguments and restart. Remove -XX:+DisableAttachMechanism if present. Java 21 normally prints a dynamic-agent warning. You need a Java 21 JDK to rebuild source.
+Use Java 21 with jdk.attach under the same OS user as Minecraft. If dynamic attachment is disabled, add -XX:+EnableDynamicAgentLoading to Minecraft's JVM arguments and restart. Remove -XX:+DisableAttachMechanism if present. Java 21 normally prints a dynamic-agent warning. A Java 21 JDK is required to rebuild source.
 
-## Planting behavior
+## Placement behavior
 
-The required held item defaults to erazion:experience_seeds. The uploaded Erazion JAR targets Minecraft 1.21.8 and contains this seed's assets and translation key item.erazion.experience_seeds, displayed as Exp Seeds in English and Graine d'XP in French. Item registration code is obfuscated; the agent compares the live registry ID and logs the held and required IDs when P is pressed. A different display language does not affect matching.
+There is no seed, item ID, or farmland restriction. Any nonempty main-hand stack can be used, including building blocks, XP Seeds and other crops or items. The module does not switch hotbar slots or refill your hand. Empty stacks pause requests.
 
-The module uses only the selected main-hand stack. Other crops and empty stacks pause planting. It does not switch slots or refill your hand. Prepare soil with a hoe first: only minecraft:farmland is eligible, and the block immediately above it must be air. Existing crops, water, other occupied blocks, dirt and grass are skipped. Moisture, lighting and other Erazion growth/placement rules remain the server's responsibility.
+Only one support Y layer is scanned: the integer coordinate immediately below the player's actual feet position, calculated as floor(nextDown(playerY)). Feet at Y=64 select support blocks at Y=63. Standing on farmland at feet Y=63.9375 also selects Y=63; a slab at feet Y=63.5 selects Y=63. Negative coordinates work the same way. The layer updates when the player moves up or down. No support blocks on other Y layers are used, even if they are nearby.
 
-It scans a sphere extending up to 5 blocks from the player's eyes to the top-center hit point of each farmland block, including uneven ground and negative coordinates. This measures interaction distance, not a square or a flat 5-block horizontal disk. Each request uses MAIN_HAND, the UP face, a hit at x+0.5/y+0.9375/z+0.5, and Minecraft's own interaction sequence sender. The selected hotbar slot is synchronized before each batch.
+Eligible supports must be non-air blocks with a nonempty collision shape whose top lies within their block cell, and the block immediately above must be air. Occupied placement spaces and non-colliding supports such as water are skipped. The packet uses MAIN_HAND, the UP face and the support's collision-shape top-center height, including the lowered top of farmland and slabs. Hit positions must be within 5 blocks of the player's eyes. The selected hotbar slot is synchronized before each batch.
 
-Every eligible target in a batch is requested in one client-thread task, nearest first, without waiting between targets or waiting for each crop to appear. Each block still needs its own packet and the server processes requests individually. The default and maximum batch size is 70 requests. The agent checks that your held XP Seed stack is nonempty, but does not reserve seeds or cap requests to the displayed count. The server consumes seeds and rejects any requests it cannot fulfill; 70 requests do not guarantee 70 crops when fewer seeds or eligible soil blocks are available. No digging packets are sent, and the agent does not fabricate local crops or inventory changes.
+The default and maximum batch size is 70 block-use requests. A whole eligible batch is sent in one client-thread task with no per-target delay and no waiting for placement acknowledgements. The delay after each completed batch stays 100 ms. Unacknowledged positions can be retried in the next 100 ms batch. The module does not reserve inventory or cap requests to the displayed item count. Already placed blocks above supports are skipped as soon as updates reach the client. Only one task can remain queued, preventing a backlog after a busy frame.
 
-The default delay after each completed batch is 100 ms. There is no delay between targets inside the same batch and no waiting for placement acknowledgements. Unacknowledged positions can be retried in the next 100 ms batch. The old one-second retry and inventory-reservation wait have been removed. Already planted positions are skipped as soon as crop updates reach the client. The scheduler keeps only one queued task, avoiding a backlog after a busy frame.
+Every target still requires a separate PlayerInteractBlockC2SPacket. The server applies the held item's normal right-click behavior: a building block may place, seeds may plant on compatible soil, a tool may act on the support, and an interactable block may open its interface. Holding an arbitrary item does not turn it into a placeable block. Prepare soil first when using seeds. This module does not automatically sneak to override container interaction.
 
-The server decides whether each request succeeds and can reject targets outside its allowed reach or under its custom planting rules. A requested 5-block scan does not increase server reach. Stopping prevents new requests but cannot undo ones already sent.
+The server controls inventory consumption, collision checks, reach, custom item behavior and whether requests succeed. Up to 70 requests does not guarantee 70 placed blocks when fewer eligible positions or items are available. The agent does not fabricate local blocks or inventory changes and sends no digging actions. Stopping prevents new requests but cannot undo already-sent interactions. Live game/server compatibility remains untested.
 
 ## Configuration
 
 Defaults:
 
 ```cmd
-java --add-modules jdk.attach -jar planter-agent.jar 12345 planter-agent.jar "radius=5,budget=70,interval=100,retry=100,item=erazion:experience_seeds"
+java --add-modules jdk.attach -jar planter-agent.jar 12345 planter-agent.jar "radius=5,budget=70,interval=100,retry=100"
 ```
 
-Radius accepts values greater than 0 and at most 5. Budget defaults to 70; 1..70 limits requests per batch and 0 also means 70. Values over 70 are rejected. Interval accepts 20..1000 ms; retry accepts values from interval through 10000 ms. Item accepts a namespaced registry ID. Changing configuration requires restarting Minecraft and attaching again. P logs the currently held item ID in Minecraft's latest.log for diagnosing mismatches.
+Radius accepts values greater than 0 and at most 5. Budget defaults to 70; 1..70 limits requests per batch and 0 also means 70. Values over 70 are rejected. Interval accepts 20..1000 ms; retry accepts interval through 10000 ms. The old item option has been removed. Restart Minecraft to change configuration or upgrade an attached agent.
 
 ## Source and verification
 
-Generated source and mock tests are in source/. Build on Windows with source\build.cmd or Linux with source/build.sh; no external build dependencies are needed. Run source/test.sh on Linux with Java 21 to verify actual JVM attachment against mocked game classes.
+Generated source and game mocks are in source/. Build on Windows with source\build.cmd or Linux with source/build.sh. Run source/test.sh on Linux with Java 21 to verify actual JVM attachment against mocked game classes. No external build dependencies are needed.
 
-Tests cover a 70-target batch, custom seed ID filtering, bare dirt and occupied-soil exclusion, the hard 70-request cap, nonempty held stacks without inventory reservations, placement acknowledgements, refill and replanting, 100 ms retry timing, exact 5-block boundaries and negative coordinates, packet hand/face/hit positions/sequences, 100 ms scheduling, menus, focus, world changes, task backlog, P/End controls and CMD stop.
+Tests cover a 70-request burst, 100 ms repeats, arbitrary blocks/seeds/items, empty hand, occupied spaces, non-colliding supports, the single feet-Y layer, standing on farmland/slabs, fractional and integer negative Y, moving between layers, exact 5-block range boundaries, packet hand/face/top heights/sequences, mock server inventory consumption and placement updates, refill, rebuilding, menus, focus, world changes, task backlog, P/End and CMD stop.
 
-Packet, hit-result, registry, inventory and block-state symbols were checked against FabricMC Yarn 1.21.8 mappings. The uploaded Erazion JAR was inspected for metadata, assets and translation keys; it is not included in this package. Runtime tests use mocks and cannot establish live Erazion server acceptance or planting behavior. Live game/server compatibility remains untested.
+Packet, hit-result, entity feet position, block-state collision shape, voxel shape and inventory symbols were checked against FabricMC Yarn 1.21.8 mappings. Mock attachment tests do not establish live server acceptance or actual placement behavior. The uploaded Erazion JAR is not included or required by the module itself; Erazion items still require Erazion in your game.
 
-Package SHA-256: `bceb20cac99321a1efe9c5037ca21f4a7a5bd1c5ba5c38aa317351388e7a31ed`
+Package SHA-256: `a451a830dd34651157f9fc39b28a54380fc68057e621aaa58cfe6935ca6ff021`
 
-1663 checks passed across two actual JVM attachment runs using mock Minecraft classes, including a 70-request batch, 100 ms repeats and CMD stop.
+2393 checks passed across two actual JVM attachments using mocked Minecraft classes, including arbitrary held items, support layers and CMD stop.

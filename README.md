@@ -1,16 +1,18 @@
 # Minecraft agent downloads
 
-## XP crop planter — Fabric 1.21.8, version 2
+## General top placement module — Fabric 1.21.8, version 3
 
-[Download planter-package.zip](https://github.com/Calculus1212/Codex/raw/main/planter-package.zip) | [Full planter instructions](planter-README.md)
+[Download planter-package.zip](https://github.com/Calculus1212/Codex/raw/main/planter-package.zip) | [Full placement instructions](planter-README.md)
 
-Sends up to 70 Erazion XP Seed planting requests to empty farmland within 5 blocks in one burst, then waits 100 ms before the next batch. There is no per-target delay or one-second retry pause. Hold XP Seeds in your selected hotbar slot, attach from CMD, then press P to enable. End stops it. Restart Minecraft and extract this update into its own folder before attaching.
+Uses any nonempty item in your selected main hand on the top faces of blocks on the layer immediately below your feet, within 5 blocks. Sends up to 70 requests in one burst, then waits 100 ms. Occupied spaces above supports are skipped. Seeds, building blocks and other items use their normal server behavior.
 
-The server still needs enough seeds and can process or reject requests individually. A burst of 70 requests does not guarantee 70 instant crops.
+Restart Minecraft, extract this update into its own folder, hold the item you want to use, attach from CMD, then press P to enable. End stops it. Slabs, farmland and negative Y coordinates select the correct support layer.
 
-Package SHA-256: `bceb20cac99321a1efe9c5037ca21f4a7a5bd1c5ba5c38aa317351388e7a31ed`
+The server controls whether each request places a block, plants a crop or performs another interaction. A burst of 70 requests does not guarantee 70 placements.
 
-Mock tests passed, including a 70-target batch and CMD stop. Live Erazion game/server compatibility remains untested.
+Package SHA-256: `a451a830dd34651157f9fc39b28a54380fc68057e621aaa58cfe6935ca6ff021`
+
+Mock tests passed, including a 70-request burst, feet-layer filtering and CMD stop. Live game/server compatibility remains untested.
 
 ---
 
