@@ -1,10 +1,10 @@
 # Minecraft agent downloads
 
-## General top placement module — Fabric 1.21.8, version 6
+## General top placement module — Fabric 1.21.8, version 7
 
 [Download planter-package.zip](https://github.com/Calculus1212/Codex/raw/main/planter-package.zip) | [Full placement instructions](planter-README.md)
 
-A desktop settings window opens after attachment. Configure batch delay (20–1000 ms), requests per batch (1–70), and target range (greater than 0, up to 8 blocks), then click Apply settings. Defaults remain 100 ms, 70 requests and 8 blocks. O in Minecraft or `attach.cmd PID gui` reopens the window. Hide or close leaves the agent attached; End stops it.
+A desktop settings window opens after attachment. Configure batch delay (20–1000 ms), requests per batch (1–70), and target range (greater than 0, up to 8 blocks), then click Apply settings. Defaults remain 100 ms, 70 requests and 8 blocks. O in Minecraft or `attach.cmd PID gui` reopens the window. The gui command now also installs the default module on first attachment. Hide or close leaves the agent attached; End stops it.
 
 Uses any nonempty main-hand item on top faces of blocks immediately below your feet. Each batch continues where the previous batch stopped, restarting nearest-first only after scanning the full area. Delay and request changes preserve progress; range changes restart the scan. Occupied spaces above supports are skipped.
 
@@ -12,9 +12,9 @@ Restart Minecraft to upgrade, extract the package, attach from CMD, then press P
 
 The server controls reach and whether requests place a block, plant a crop or perform another interaction. A burst of 70 requests does not guarantee 70 placements.
 
-Package SHA-256: `aa08b6f19a891b5b569404c505792f0cdb5baa61d091a1af0df7d7053d972335`
+Package SHA-256: `5733fa8e7d412aabfca4440ac25ae04573c1f004a40a0627425e706ff5017bc1`
 
-Passed 6328 checks across actual JVM attachments with mocked game classes, plus a desktop window smoke test with an actual Apply click, hide, reopen and disposal. Live game/server compatibility remains untested.
+Added tests for GUI-first installation, reopening, old-agent upgrade detection, and target-side error reporting in CMD. Passed 6328 checks across actual JVM attachments with mocked game classes, plus a desktop window smoke test with an actual Apply click, hide, reopen and disposal. Live game/server compatibility remains untested.
 
 ---
 

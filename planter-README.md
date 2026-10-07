@@ -1,4 +1,4 @@
-# General top placement module for Fabric 1.21.8, version 6
+# General top placement module for Fabric 1.21.8, version 7
 
 An attachable Java 21 agent that sends top-face block-use requests using any nonempty item in your selected main hand. It targets only the block layer immediately below your feet. Fabric Loader in the intermediary namespace is required; Fabric API is optional. The package keeps the existing planter-agent.jar name.
 
@@ -56,7 +56,7 @@ Edit the values and click **Apply settings** to update the running module. No re
 
 Changing delay or request count keeps the current sweep position. Changing range restarts the nearest-first scan on the next active batch. Applying settings does not enable the module: P remains its toggle. GUI changes also set the retry cooldown to the selected batch delay.
 
-**Defaults** fills in 100 ms, 70 requests and 8 blocks; click **Apply settings** to commit. **Hide** and the window close button hide the window while keeping the module attached. O or `attach.cmd 12345 gui` reopens it with current values. End or CMD stop disposes the window. Requests pause while Minecraft is unfocused, including while you edit the separate settings window. Values last for the current Minecraft session and are not saved to disk.
+**Defaults** fills in 100 ms, 70 requests and 8 blocks; click **Apply settings** to commit. **Hide** and the window close button hide the window while keeping the module attached. O or `attach.cmd 12345 gui` reopens it with current values. The `gui` command also installs this version with default settings when nothing is attached yet. End or CMD stop disposes the window. Requests pause while Minecraft is unfocused, including while you edit the separate settings window. Values last for the current Minecraft session and are not saved to disk.
 
 The desktop window requires Java's desktop/Swing support. A headless runtime retains command-line settings. Minecraft's normal Windows Java 21 runtime includes desktop support.
 
@@ -70,10 +70,18 @@ java --add-modules jdk.attach -jar planter-agent.jar 12345 planter-agent.jar "ra
 
 Radius accepts values greater than 0 and at most 8. Budget defaults to 70; 1..70 limits requests per batch and 0 also means 70. Values over 70 are rejected. Interval accepts 20..1000 ms; retry accepts interval through 10000 ms. If retry is omitted it defaults to at least the selected interval. The old item option has been removed. Restart Minecraft to upgrade an attached agent; use the GUI to change settings live.
 
+## Attachment troubleshooting
+
+The `gui` command works both on first attachment and when reopening the window. Use Minecraft's current PID. After restarting Minecraft, run `attach.cmd` again to find the new PID.
+
+If an older planter agent is loaded, the launcher asks you to restart Minecraft before installing this package. Replacing the JAR on disk cannot upgrade classes already loaded in the running game. End only stops the existing agent; it does not unload it.
+
+Initialization failures now display the target-side cause in CMD when available. The complete Attach Listener exception is in Minecraft's log or launcher console. If it still fails, include that cause when reporting the issue.
+
 ## Source and verification
 
 Generated source and game mocks are in source/. Build on Windows with source\build.cmd or Linux with source/build.sh. Run source/test.sh on Linux with Java 21 to verify actual JVM attachment against mocked game classes. No external build dependencies are needed. The optional `planter.WindowFixture` desktop smoke test requires a display or Xvfb and verifies an actual Apply click, hide, reopen and disposal.
 
-Tests cover live Apply changes to all three settings, scheduler delay changes, cursor retention and range reset, invalid input, defaults, CMD GUI reopening, stopped-agent rejection, and a 70-request burst, 100 ms continuation batches, full area coverage before wraparound, rejected requests without starvation, retained progress across pauses/refills/fractional movement, resets on block movement, arbitrary blocks/seeds/items, empty hand, occupied spaces, non-colliding supports, the single feet-Y layer, standing on farmland/slabs, fractional and integer negative Y, moving between layers, exact 8-block range boundaries and targets beyond the old 5-block limit, packet hand/face/top heights/sequences, mock server inventory consumption and placement updates, refill, rebuilding, menus, focus, world changes, task backlog, P/End and CMD stop.
+Tests cover GUI-first installation, reopening without reinstalling, old-agent detection, target-side failure diagnostics in CMD, live Apply changes to all three settings, scheduler delay changes, cursor retention and range reset, invalid input, defaults, CMD GUI reopening, stopped-agent rejection, and a 70-request burst, 100 ms continuation batches, full area coverage before wraparound, rejected requests without starvation, retained progress across pauses/refills/fractional movement, resets on block movement, arbitrary blocks/seeds/items, empty hand, occupied spaces, non-colliding supports, the single feet-Y layer, standing on farmland/slabs, fractional and integer negative Y, moving between layers, exact 8-block range boundaries and targets beyond the old 5-block limit, packet hand/face/top heights/sequences, mock server inventory consumption and placement updates, refill, rebuilding, menus, focus, world changes, task backlog, P/End and CMD stop.
 
 Packet, hit-result, entity feet position, block-state collision shape, voxel shape and inventory symbols were checked against FabricMC Yarn 1.21.8 mappings. Mock attachment tests do not establish live server acceptance or actual placement behavior. The uploaded Erazion JAR is not included or required by the module itself; Erazion items still require Erazion in your game.
