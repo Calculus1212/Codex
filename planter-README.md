@@ -1,6 +1,6 @@
-# Replanter for Fabric 1.21.8, version 8
+# Replanter for Fabric 1.21.8, version 9
 
-An attachable Java 21 agent with a modeless JOptionPane settings dialog. Configure batch delay, maximum block-use requests per batch, range, and a 7×7 checkbox planting pattern while the game is running. Fabric Loader in the intermediary namespace is required; Fabric API is optional. The package keeps the planter-agent.jar name.
+An attachable Java 21 agent with a modeless JOptionPane settings dialog. Version 9 fixes missing settings windows when Minecraft is launched with headless Java. The CMD Java process hosts the controls in that case and applies settings to the running agent through the local Java Attach API. Configure batch delay, maximum block-use requests per batch, range, and a 7×7 checkbox planting pattern while the game is running. Fabric Loader in the intermediary namespace is required; Fabric API is optional. The package keeps the planter-agent.jar name.
 
 ## Windows CMD
 
@@ -16,7 +16,11 @@ Find Minecraft's current PID and replace 12345:
 attach.cmd 12345 gui
 ```
 
-Both `attach.cmd 12345` and `attach.cmd 12345 gui` install the module and open settings on first attachment. O in Minecraft or the gui command reopens the current dialog. P toggles interactions. The module starts OFF. End stops it until Minecraft restarts. Use Alt+Tab to move between the separate desktop dialog and Minecraft. Closing or hiding settings leaves the module attached. Settings change live; upgrading the JAR requires a game restart and a new PID.
+Both `attach.cmd 12345` and `attach.cmd 12345 gui` install the module and open settings on first attachment. P toggles interactions. The module starts OFF. End stops it until Minecraft restarts. Use Alt+Tab to move between the separate desktop dialog and Minecraft. Settings change live; upgrading the JAR requires a game restart and a new PID. This is an attachable agent package; keep it in a separate extracted folder rather than Minecraft's mods folder.
+
+If Minecraft reports `Minecraft Java is headless`, the settings window opens in the separate CMD Java process. The supplied attach.cmd sets `-Djava.awt.headless=false` for that process only, so Minecraft's launcher arguments need no change. Keep the CMD window open while editing settings. Closing the external dialog or clicking Close disconnects only the controls and leaves the module attached. Reopen with `attach.cmd 12345 gui`; the applied values and checkbox pattern are read back from the game. P and End still work in-game. O prints the GUI command when Minecraft is headless; it cannot create an in-game-process desktop window in that mode.
+
+When Minecraft can host desktop windows itself, the existing in-process dialog remains available: O or the gui command reopens it, and closing or hiding it leaves the module attached. External controls close automatically when the agent stops or the game exits. Local attachment runs under the same Windows user; no network ports or downloads are used.
 
 ```cmd
 attach.cmd 12345 stop
@@ -54,15 +58,15 @@ These are interaction requests, not guaranteed successful placements. The server
 ## Command-line configuration
 
 ```cmd
-java --add-modules jdk.attach -jar planter-agent.jar 12345 planter-agent.jar "radius=8,budget=70,interval=100,retry=100,pattern=on"
+java -Djava.awt.headless=false --add-modules jdk.attach -jar planter-agent.jar 12345 planter-agent.jar "radius=8,budget=70,interval=100,retry=100,pattern=on"
 ```
 
-Pattern defaults to on with all cells selected. `pattern=off` restores the previous circular range scan. Custom checkbox shapes are configured through the dialog. Budget 0 also means 70; larger values are rejected. Retry accepts values from interval through 10000 ms; if omitted it defaults to at least interval. The old item option is unsupported.
+Pattern defaults to on with all cells selected. `pattern=off` restores the previous circular range scan. Custom checkbox shapes are configured through the dialog. Budget 0 also means 70; larger values are rejected. Retry accepts values from interval through 10000 ms; if omitted it defaults to at least interval. The old item option is unsupported. For a console-only attachment, add `-Dplanter.gui.noAutostart=true` before `--add-modules`; an existing in-process desktop dialog may still open.
 
 ## Source and verification
 
 Source, build scripts and game mocks are included in source/. Rebuild with a Java 21 JDK using source\build.cmd on Windows or source/build.sh on Linux. No external build dependencies are required.
 
-Run source/test.sh on Linux with Java 21. It verifies actual JVM attachment against mocked Minecraft classes, GUI-first installation, live settings changes, scheduler timing, full-radius sweep continuation, upgrade/error diagnostics, and packet-level 7×7 pattern behavior. Pattern checks cover all 49 cells, asymmetric selections, corners and center, budget continuation, pattern resets, changed delay/limit retaining progress, fractional movement, negative coordinates, empty selections, empty hands, occupancy and GUI restoration. The optional planter.WindowFixture desktop test verifies actual checkbox and Apply clicks, reopening and disposal; it requires a display or Xvfb.
+Run source/test.sh on Linux with Java 21. It verifies actual JVM attachment against mocked Minecraft classes, GUI-first installation, live settings changes, scheduler timing, full-radius sweep continuation, upgrade/error diagnostics, and packet-level 7×7 pattern behavior. Pattern checks cover all 49 cells, asymmetric selections, corners and center, budget continuation, pattern resets, changed delay/limit retaining progress, fractional movement, negative coordinates, empty selections, empty hands, occupancy and GUI restoration. The optional planter.WindowFixture desktop test verifies actual checkbox and Apply clicks, reopening and disposal; it requires a display or Xvfb. With a desktop DISPLAY and complete Java 21 desktop runtime, source/test-desktop.py runs the actual Attach.main GUI route against a separate JVM forced to `-Djava.awt.headless=true`. It verifies the external window, live Apply, request limits, selected-cell packets, retained settings after closing and reopening, and automatic disposal after End. Set PLANTER_DESKTOP_JAVA to the desktop Java executable if needed.
 
 Minecraft intermediary symbols were checked against FabricMC Yarn 1.21.8. Mock tests and desktop smoke tests do not establish live server acceptance. Live Minecraft/server compatibility remains untested. Uploaded Erazion JARs are not included in this package; their custom items still require the appropriate game mod.

@@ -1,20 +1,20 @@
 # Minecraft agent downloads
 
-## Replanter — Fabric 1.21.8, version 8
+## Replanter — Fabric 1.21.8, version 9
 
 [Download planter-package.zip](https://github.com/Calculus1212/Codex/raw/main/planter-package.zip) | [Full replanter instructions](planter-README.md)
 
-Configure delay, maximum blocks per batch, range and a 7×7 checkbox pattern in a modeless JOptionPane dialog. The highlighted center is your player block; north is up, east right. Each checked box is a support block on the layer below your feet. The pattern moves with you and keeps its compass orientation. Click Apply settings to use the edited shape. Select all and Clear all buttons simplify editing.
+Version 9 fixes missing settings windows when Minecraft reports headless Java. In that case the CMD Java process displays the controls, independently of Minecraft's desktop-window restrictions. The supplied attach.cmd enables desktop windows for the controller only; no launcher JVM argument changes are needed. Settings are applied to the running agent through local Java attachment.
 
-Defaults: 100 ms, a limit of 70 requests, range 8 and all 49 cells selected. A pattern pass uses at most 49 distinct targets, and fewer when cells are ineligible. Batches continue after the previous batch's last target; only a complete pass restarts nearest-first. Delay and count changes preserve progress; pattern and range changes restart the scan. Uncheck Use checked cells to restore the full-radius scan.
+Configure batch delay, maximum block-use requests, range and the 7×7 checkbox pattern in the settings dialog. Defaults remain 100 ms, 70 requests, range 8 and all 49 cells selected. The pattern moves with the player, keeps its compass orientation and targets the support layer under the feet. Batches continue after the last target; only a completed pass restarts nearest-first. Delay and request-count edits preserve scan progress; pattern and range edits restart it. Uncheck Use checked cells to restore the full-radius scan. Click Apply settings to commit edits.
 
-Restart Minecraft to upgrade, extract the package, run attach.cmd to find its new PID, then attach.cmd PID gui. This command works on first attachment and when reopening. P toggles interactions; O reopens settings; End stops. Menus, empty hands and lost focus pause requests. Settings apply live and last for the session.
+Restart Minecraft to upgrade. Extract the new package into a separate folder, run attach.cmd to find Minecraft's new PID, then run attach.cmd PID gui. Keep CMD open while using the external window. Closing that window leaves the agent attached; reopen with the same gui command to recover the applied settings and pattern. P toggles interactions; End stops. O can reopen an in-process window when Minecraft supports desktop windows; for headless Minecraft use the CMD command. Menus, empty hands and lost game focus pause requests. Settings last for the session. Keep the agent package outside the mods folder.
 
-Hold seeds to plant on compatible prepared soil or another item to use its normal block interaction. Occupied planting spaces are skipped. The module does not harvest crops. The server controls reach, collisions, inventory and successful placement.
+Hold seeds to plant on compatible prepared soil or another item to use its normal block interaction. Occupied spaces are skipped. The module does not harvest crops. The server controls reach, collisions, inventory and successful placement.
 
-Package SHA-256: `32eab35177f368f27ef38a111d1966bb02cb83a62c345aaf1d7228778870c951`
+Package SHA-256: `46538f77d1964ca28857419b9905b2b5abb28f92b1d5ee8ae73b083a19a0185f`
 
-Passed mock attachment and live settings checks, 191 packet-level pattern checks, and desktop JOptionPane smoke tests with actual checkbox and Apply clicks at standard and smaller display sizes. Live Minecraft/server compatibility remains untested. Source and tests are included in the download.
+Passed 6,519 mock placement, live-settings and pattern checks, upgrade/error diagnostics, actual desktop checkbox and Apply clicks, and the exact external GUI launcher route attached to a separate JVM forced into headless mode. The external test verifies live pattern packets, request limits, reopening with retained settings and automatic closure after End. Live Minecraft/server compatibility remains untested. Source and tests are included in the download.
 
 ---
 
