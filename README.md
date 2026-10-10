@@ -1,20 +1,20 @@
 # Minecraft agent downloads
 
-## General top placement module — Fabric 1.21.8, version 7
+## Replanter — Fabric 1.21.8, version 8
 
-[Download planter-package.zip](https://github.com/Calculus1212/Codex/raw/main/planter-package.zip) | [Full placement instructions](planter-README.md)
+[Download planter-package.zip](https://github.com/Calculus1212/Codex/raw/main/planter-package.zip) | [Full replanter instructions](planter-README.md)
 
-A desktop settings window opens after attachment. Configure batch delay (20–1000 ms), requests per batch (1–70), and target range (greater than 0, up to 8 blocks), then click Apply settings. Defaults remain 100 ms, 70 requests and 8 blocks. O in Minecraft or `attach.cmd PID gui` reopens the window. The gui command now also installs the default module on first attachment. Hide or close leaves the agent attached; End stops it.
+Configure delay, maximum blocks per batch, range and a 7×7 checkbox pattern in a modeless JOptionPane dialog. The highlighted center is your player block; north is up, east right. Each checked box is a support block on the layer below your feet. The pattern moves with you and keeps its compass orientation. Click Apply settings to use the edited shape. Select all and Clear all buttons simplify editing.
 
-Uses any nonempty main-hand item on top faces of blocks immediately below your feet. Each batch continues where the previous batch stopped, restarting nearest-first only after scanning the full area. Delay and request changes preserve progress; range changes restart the scan. Occupied spaces above supports are skipped.
+Defaults: 100 ms, a limit of 70 requests, range 8 and all 49 cells selected. A pattern pass uses at most 49 distinct targets, and fewer when cells are ineligible. Batches continue after the previous batch's last target; only a complete pass restarts nearest-first. Delay and count changes preserve progress; pattern and range changes restart the scan. Uncheck Use checked cells to restore the full-radius scan.
 
-Restart Minecraft to upgrade, extract the package, attach from CMD, then press P to enable. Menus, empty hands and lost focus pause requests. Crossing into a different player block or support Y layer resets the scan. Settings can be edited live without restarting and last for the current session.
+Restart Minecraft to upgrade, extract the package, run attach.cmd to find its new PID, then attach.cmd PID gui. This command works on first attachment and when reopening. P toggles interactions; O reopens settings; End stops. Menus, empty hands and lost focus pause requests. Settings apply live and last for the session.
 
-The server controls reach and whether requests place a block, plant a crop or perform another interaction. A burst of 70 requests does not guarantee 70 placements.
+Hold seeds to plant on compatible prepared soil or another item to use its normal block interaction. Occupied planting spaces are skipped. The module does not harvest crops. The server controls reach, collisions, inventory and successful placement.
 
-Package SHA-256: `5733fa8e7d412aabfca4440ac25ae04573c1f004a40a0627425e706ff5017bc1`
+Package SHA-256: `32eab35177f368f27ef38a111d1966bb02cb83a62c345aaf1d7228778870c951`
 
-Added tests for GUI-first installation, reopening, old-agent upgrade detection, and target-side error reporting in CMD. Passed 6328 checks across actual JVM attachments with mocked game classes, plus a desktop window smoke test with an actual Apply click, hide, reopen and disposal. Live game/server compatibility remains untested.
+Passed mock attachment and live settings checks, 191 packet-level pattern checks, and desktop JOptionPane smoke tests with actual checkbox and Apply clicks at standard and smaller display sizes. Live Minecraft/server compatibility remains untested. Source and tests are included in the download.
 
 ---
 

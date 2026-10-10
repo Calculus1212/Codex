@@ -1,87 +1,68 @@
-# General top placement module for Fabric 1.21.8, version 7
+# Replanter for Fabric 1.21.8, version 8
 
-An attachable Java 21 agent that sends top-face block-use requests using any nonempty item in your selected main hand. It targets only the block layer immediately below your feet. Fabric Loader in the intermediary namespace is required; Fabric API is optional. The package keeps the existing planter-agent.jar name.
+An attachable Java 21 agent with a modeless JOptionPane settings dialog. Configure batch delay, maximum block-use requests per batch, range, and a 7×7 checkbox planting pattern while the game is running. Fabric Loader in the intermediary namespace is required; Fabric API is optional. The package keeps the planter-agent.jar name.
 
 ## Windows CMD
 
-Restart Minecraft before attaching this update. Extract planter-package.zip into its own folder. Enter your world, select the item or block you want to use in your hotbar, and open CMD in the extracted folder.
+Restart Minecraft before upgrading an attached agent. Extract planter-package.zip into its own folder, enter your world, hold the seeds or item you want to use, and open CMD in that folder.
 
 ```cmd
 attach.cmd
 ```
 
-Find Minecraft's PID and replace 12345:
+Find Minecraft's current PID and replace 12345:
 
 ```cmd
-attach.cmd 12345
+attach.cmd 12345 gui
 ```
 
-A separate desktop settings window opens automatically after attachment. Use Alt+Tab to switch between Minecraft and this window. Press O in the game to reopen it, or run `attach.cmd 12345 gui`.
-
-Press P to enable or disable interactions. It starts OFF. End stops the agent until Minecraft restarts. Menus and lost focus pause requests, and switching worlds turns the module OFF. To stop through CMD:
+Both `attach.cmd 12345` and `attach.cmd 12345 gui` install the module and open settings on first attachment. O in Minecraft or the gui command reopens the current dialog. P toggles interactions. The module starts OFF. End stops it until Minecraft restarts. Use Alt+Tab to move between the separate desktop dialog and Minecraft. Closing or hiding settings leaves the module attached. Settings change live; upgrading the JAR requires a game restart and a new PID.
 
 ```cmd
 attach.cmd 12345 stop
 ```
 
-Use Java 21 with jdk.attach under the same OS user as Minecraft. If dynamic attachment is disabled, add -XX:+EnableDynamicAgentLoading to Minecraft's JVM arguments and restart. Remove -XX:+DisableAttachMechanism if present. Java 21 normally prints a dynamic-agent warning. A Java 21 JDK is required to rebuild source.
+Use Java 21 with jdk.attach under the same OS user as Minecraft. If attachment is disabled, add -XX:+EnableDynamicAgentLoading to Minecraft's JVM arguments, remove -XX:+DisableAttachMechanism if present, and restart. Java 21 normally prints a dynamic-agent warning. Initialization failures show the underlying cause in CMD when available; the complete Attach Listener exception is in the game log or launcher console. An older loaded planter agent must be replaced by restarting Minecraft.
+
+## Settings and the 7×7 pattern
+
+Defaults are 100 ms between completed batches, a maximum of 70 requests per batch, range 8, and pattern mode enabled with all 49 cells checked.
+
+- **Delay between batches:** 20–1000 ms.
+- **Maximum blocks per batch:** 1–70 placement attempts.
+- **Target range:** greater than 0 and at most 8 blocks, measured from the eyes to the support's top-center.
+- **Use checked cells:** enables the 7×7 pattern. Uncheck it to restore the full-radius scan; the edited pattern is retained.
+
+Each checkbox is one support block. The highlighted center is your current player block. Grid rows run north (−Z) to south (+Z); columns run west (−X) to east (+X). Top-left is offset X=−3, Z=−3, and bottom-right is X=+3, Z=+3. The center cell is independently selectable. The pattern moves with the player and keeps its compass orientation when you turn. It covers offsets −3 through +3 from floor(playerX), floor(playerZ); fractional movement does not shift the grid until a player block boundary is crossed.
+
+Click cells to design the planting shape, or use **Select all** and **Clear all**. Click **Apply settings** to commit both the pattern and numeric settings. Editing checkboxes or loading defaults alone does not change the running module. Clearing every cell and applying sends no requests while pattern mode is enabled. Reopening shows the applied settings and pattern. Values last for the current Minecraft session and are not saved to disk.
+
+Changing the pattern, toggling pattern mode or changing range restarts the nearest-first scan on the next active batch. Changing only delay or the request limit preserves scan progress. Each batch continues after the last examined target, including skipped cells, until the whole selected pattern is examined. It restarts nearest-first on a later batch, never halfway through the last batch of a pass. Cells outside the configured range are skipped even if checked. With all 49 cells selected, a complete pattern pass can contain at most 49 distinct requests, and fewer when some cells are ineligible; a request limit of 70 does not repeat cells to fill the batch.
+
+A running batch keeps its original settings. A new delay affects the next scheduled wait; an already pending wait finishes first. The wait follows the completed client-thread task, so this is not an exact wall-clock rate. GUI Apply sets the retry cooldown to the selected delay. Only one task can remain queued, preventing a backlog. **Defaults** loads the original settings and all selected cells; click Apply to commit. The dialog can scroll on smaller displays.
 
 ## Placement behavior
 
-There is no seed, item ID, or farmland restriction. Any nonempty main-hand stack can be used, including building blocks, XP Seeds and other crops or items. The module does not switch hotbar slots or refill your hand. Empty stacks pause requests.
+The module sends MAIN_HAND, UP-face PlayerInteractBlockC2SPacket requests using any nonempty selected main-hand item, including XP Seeds, other seeds, building blocks or tools. It does not switch hotbar slots or refill inventory. Empty hands, menus and lost Minecraft focus pause requests and preserve scan progress. Editing the desktop dialog pauses requests while Minecraft is unfocused. World changes turn the module OFF. Crossing an X/Z block boundary, changing support Y, or toggling P resets the sweep.
 
-Only one support Y layer is scanned: the integer coordinate immediately below the player's actual feet position, calculated as floor(nextDown(playerY)). Feet at Y=64 select support blocks at Y=63. Standing on farmland at feet Y=63.9375 also selects Y=63; a slab at feet Y=63.5 selects Y=63. Negative coordinates work the same way. The layer updates when the player moves up or down. No support blocks on other Y layers are used, even if they are nearby.
+Only the support layer immediately below the player's actual feet is considered: floor(nextDown(playerY)). Feet at Y=64 use support Y=63. Standing on farmland at 63.9375 or a slab at 63.5 also selects Y=63; negative coordinates work the same way. Hit height uses the support's collision-shape top. No other support layers are targeted.
 
-Eligible supports must be non-air blocks with a nonempty collision shape whose top lies within their block cell, and the block immediately above must be air. Occupied placement spaces and non-colliding supports such as water are skipped. The packet uses MAIN_HAND, the UP face and the support's collision-shape top-center height, including the lowered top of farmland and slabs. Hit positions must be within the configured range (8 blocks by default) of the player's eyes. The selected hotbar slot is synchronized before each batch.
+Eligible supports must be non-air, have a nonempty collision shape with its top within its block cell, and have air directly above. Water, non-colliding supports and occupied placement spaces are skipped. The selected hotbar slot is synchronized before each batch. Requests use Minecraft's private sequenced sender and run on the client thread. The entire eligible batch is sent without per-cell delay or waiting for placement acknowledgements. No digging packets, local placement or inventory changes are fabricated.
 
-The default and maximum batch size is 70 block-use requests. A whole eligible batch is sent in one client-thread task with no per-target delay and no waiting for placement acknowledgements. The default delay after each completed batch is 100 ms and can be changed in the settings window. The module remembers its position in the nearest-first target list: each batch continues after the last examined target, including skipped positions, until the full configured area has been scanned. Failed nearby requests cannot prevent farther targets from being attempted. The last batch of a pass may contain fewer than 70 requests. The nearest-first list restarts on the following batch after a complete pass, never midway through the last batch.
-
-Menus, lost focus and an empty hand pause the scan without advancing or resetting its cursor. Fractional movement inside the same X/Z player block also retains progress; each hit is still checked against your current eye position and configured radius. Crossing into a different X/Z block, changing the support Y layer, toggling the module or switching worlds resets the sweep for the new area. The target list is rebuilt at the start of each pass, and block/occupancy data is checked live as each position is visited.
-
-The default retry cooldown is 100 ms, but a position is revisited only after the current full sweep finishes. The module does not reserve inventory or cap requests to the displayed item count. Already placed blocks above supports are skipped as soon as updates reach the client. Only one task can remain queued, preventing a backlog after a busy frame.
-
-Every target still requires a separate PlayerInteractBlockC2SPacket. The server applies the held item's normal right-click behavior: a building block may place, seeds may plant on compatible soil, a tool may act on the support, and an interactable block may open its interface. Holding an arbitrary item does not turn it into a placeable block. Prepare soil first when using seeds. This module does not automatically sneak to override container interaction.
-
-The server controls inventory consumption, collision checks, reach, custom item behavior and whether requests succeed. Up to 70 requests does not guarantee 70 placed blocks when fewer eligible positions or items are available. The agent does not fabricate local blocks or inventory changes and sends no digging actions. Stopping prevents new requests but cannot undo already-sent interactions. Live game/server compatibility remains untested.
-
-## Live settings window
-
-The window provides three controls:
-
-- **Delay between batches:** 20–1000 ms; default 100 ms.
-- **Maximum requests per batch:** 1–70; default 70.
-- **Target range:** greater than 0 and at most 8 blocks; default 8.
-
-Edit the values and click **Apply settings** to update the running module. No restart or reattachment is needed for settings changes. A batch already running uses its original settings. The delay applies to the next scheduled batch; an already pending wait finishes first. The delay follows a completed batch, rather than promising an exact wall-clock rate.
-
-Changing delay or request count keeps the current sweep position. Changing range restarts the nearest-first scan on the next active batch. Applying settings does not enable the module: P remains its toggle. GUI changes also set the retry cooldown to the selected batch delay.
-
-**Defaults** fills in 100 ms, 70 requests and 8 blocks; click **Apply settings** to commit. **Hide** and the window close button hide the window while keeping the module attached. O or `attach.cmd 12345 gui` reopens it with current values. The `gui` command also installs this version with default settings when nothing is attached yet. End or CMD stop disposes the window. Requests pause while Minecraft is unfocused, including while you edit the separate settings window. Values last for the current Minecraft session and are not saved to disk.
-
-The desktop window requires Java's desktop/Swing support. A headless runtime retains command-line settings. Minecraft's normal Windows Java 21 runtime includes desktop support.
+These are interaction requests, not guaranteed successful placements. The server controls reach, held-item behavior, valid soil, collisions and inventory consumption. The agent does not till soil or automatically harvest existing crops. Prepare compatible soil and hold XP Seeds to plant them; cells already occupied by crops are skipped. An 8-block configured range does not extend the server's permitted reach. An arbitrary held item can use a block or open its interface rather than place. Stopping prevents new requests but cannot recall interactions already sent.
 
 ## Command-line configuration
 
-Defaults:
-
 ```cmd
-java --add-modules jdk.attach -jar planter-agent.jar 12345 planter-agent.jar "radius=8,budget=70,interval=100,retry=100"
+java --add-modules jdk.attach -jar planter-agent.jar 12345 planter-agent.jar "radius=8,budget=70,interval=100,retry=100,pattern=on"
 ```
 
-Radius accepts values greater than 0 and at most 8. Budget defaults to 70; 1..70 limits requests per batch and 0 also means 70. Values over 70 are rejected. Interval accepts 20..1000 ms; retry accepts interval through 10000 ms. If retry is omitted it defaults to at least the selected interval. The old item option has been removed. Restart Minecraft to upgrade an attached agent; use the GUI to change settings live.
-
-## Attachment troubleshooting
-
-The `gui` command works both on first attachment and when reopening the window. Use Minecraft's current PID. After restarting Minecraft, run `attach.cmd` again to find the new PID.
-
-If an older planter agent is loaded, the launcher asks you to restart Minecraft before installing this package. Replacing the JAR on disk cannot upgrade classes already loaded in the running game. End only stops the existing agent; it does not unload it.
-
-Initialization failures now display the target-side cause in CMD when available. The complete Attach Listener exception is in Minecraft's log or launcher console. If it still fails, include that cause when reporting the issue.
+Pattern defaults to on with all cells selected. `pattern=off` restores the previous circular range scan. Custom checkbox shapes are configured through the dialog. Budget 0 also means 70; larger values are rejected. Retry accepts values from interval through 10000 ms; if omitted it defaults to at least interval. The old item option is unsupported.
 
 ## Source and verification
 
-Generated source and game mocks are in source/. Build on Windows with source\build.cmd or Linux with source/build.sh. Run source/test.sh on Linux with Java 21 to verify actual JVM attachment against mocked game classes. No external build dependencies are needed. The optional `planter.WindowFixture` desktop smoke test requires a display or Xvfb and verifies an actual Apply click, hide, reopen and disposal.
+Source, build scripts and game mocks are included in source/. Rebuild with a Java 21 JDK using source\build.cmd on Windows or source/build.sh on Linux. No external build dependencies are required.
 
-Tests cover GUI-first installation, reopening without reinstalling, old-agent detection, target-side failure diagnostics in CMD, live Apply changes to all three settings, scheduler delay changes, cursor retention and range reset, invalid input, defaults, CMD GUI reopening, stopped-agent rejection, and a 70-request burst, 100 ms continuation batches, full area coverage before wraparound, rejected requests without starvation, retained progress across pauses/refills/fractional movement, resets on block movement, arbitrary blocks/seeds/items, empty hand, occupied spaces, non-colliding supports, the single feet-Y layer, standing on farmland/slabs, fractional and integer negative Y, moving between layers, exact 8-block range boundaries and targets beyond the old 5-block limit, packet hand/face/top heights/sequences, mock server inventory consumption and placement updates, refill, rebuilding, menus, focus, world changes, task backlog, P/End and CMD stop.
+Run source/test.sh on Linux with Java 21. It verifies actual JVM attachment against mocked Minecraft classes, GUI-first installation, live settings changes, scheduler timing, full-radius sweep continuation, upgrade/error diagnostics, and packet-level 7×7 pattern behavior. Pattern checks cover all 49 cells, asymmetric selections, corners and center, budget continuation, pattern resets, changed delay/limit retaining progress, fractional movement, negative coordinates, empty selections, empty hands, occupancy and GUI restoration. The optional planter.WindowFixture desktop test verifies actual checkbox and Apply clicks, reopening and disposal; it requires a display or Xvfb.
 
-Packet, hit-result, entity feet position, block-state collision shape, voxel shape and inventory symbols were checked against FabricMC Yarn 1.21.8 mappings. Mock attachment tests do not establish live server acceptance or actual placement behavior. The uploaded Erazion JAR is not included or required by the module itself; Erazion items still require Erazion in your game.
+Minecraft intermediary symbols were checked against FabricMC Yarn 1.21.8. Mock tests and desktop smoke tests do not establish live server acceptance. Live Minecraft/server compatibility remains untested. Uploaded Erazion JARs are not included in this package; their custom items still require the appropriate game mod.
